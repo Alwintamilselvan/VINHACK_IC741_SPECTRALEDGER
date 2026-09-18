@@ -1,0 +1,53 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: core-banking-engine
+
+  threads:
+    virtual:
+      enabled: true
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/spectraledger
+    username: spectra
+    password: spectra_dev_pw
+    hikari:
+      maximum-pool-size: 10
+      pool-name: spectra-hikari
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: Asia/Kolkata
+        globally_quoted_identifiers: true
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
+app:
+  jwt:
+    # Dev-only secret. Rotate before any real deployment - this is fine for a hackathon demo.
+    secret: c3BlY3RyYWxlZGdlci1oYWNrYXRob24tZGVtby1zZWNyZXQta2V5LW11c3QtYmUtbG9uZy1lbm91Z2gtZm9yLWhzMjU2
+    expiration-minutes: 720
+  seed:
+    enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+logging:
+  level:
+    com.spectraledger: INFO
+    org.springframework.security: INFO

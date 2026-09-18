@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SpectraLedger WebSocket Test</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+<style>
+  body { font-family: -apple-system, Segoe UI, sans-serif; margin: 0; padding: 20px; background: #0b0f14; color: #d7dde3; }
+  h1 { font-size: 18px; }
+  #status { padding: 6px 10px; border-radius: 4px; display: inline-block; font-size: 13px; margin-bottom: 12px; }
+  .disconnected { background: #4a1414; color: #ff8080; }
+  .connected { background: #123a1e; color: #6fe08c; }
+  .col { display: flex; gap: 16px; }
+  .panel { flex: 1; background: #131a22; border: 1px solid #263140; border-radius: 6px; padding: 10px; height: 60vh; overflow-y: auto; }
+  .panel h2 { font-size: 14px; margin: 0 0 8px; color: #8fa3b8; }
+  pre { white-space: pre-wrap; word-break: break-all; font-size: 12px; border-bottom: 1px solid #1c2531; padding: 6px 0; margin: 0; }
+  pre.trade { color: #ffd479; }
+  pre.book { color: #79c7ff; }
+</style>
+</head>
+<body>
+  <h1>SpectraLedger — live WebSocket feed</h1>
+  <div id="status" class="disconnected">disconnected</div>
+  <div class="col">
+    <div class="panel">
+      <h2>/topic/orderbook</h2>
+      <div id="book"></div>
+    </div>
+    <div class="panel">
+      <h2>/topic/trades</h2>
+      <div id="trades"></div>
+    </div>
+  </div>
+
+  <script>
+    // Change this if your backend isn't on the default port.
+    const BASE_URL = "http://localhost:8080";
+
+    const statusEl = document.getElementById("status");
+    const bookEl = document.getElementById("book");
+    const tradesEl = document.getElementById("trades");
+
+    function prepend(container, cssClass, obj) {
+      const pre = document.createElement("pre");
+      pre.className = cssClass;
+      pre.textContent = new Date().toLocaleTimeString() + "  " + JSON.stringify(obj);
+      container.prepend(pre);
+    }
+
+    const socket = new SockJS(BASE_URL + "/ws");
+    const client = Stomp.over(socket);
+    client.debug = null; // quiet the console
+
+    client.connect({}, () => {
+      statusEl.textContent = "connected";
+      statusEl.className = "connected";
+
+      client.subscribe("/topic/orderbook", (message) => {
+        prepend(bookEl, "book", JSON.parse(message.body));
+      });
+
+      client.subscribe("/topic/trades", (message) => {
+        prepend(tradesEl, "trade", JSON.parse(message.body));
+      });
+    }, (error) => {
+      statusEl.textContent = "connection error - is the backend running on " + BASE_URL + "?";
+      statusEl.className = "disconnected";
+      console.error(error);
+    });
+  </script>
+</body>
+</html>
